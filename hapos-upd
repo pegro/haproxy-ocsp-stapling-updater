@@ -30,6 +30,7 @@ OCSP_HOST=""
 VERIFY=1
 TMP=""
 SKIP_UPDATE=0
+SUDO=0
 PARTIAL_CHAIN=""
 
 function Quit() {
@@ -166,6 +167,8 @@ Options:
 
  -S, --skip-update     : Do not notify haproxy of the new OCSP response.
 
+     --sudo            : use sudo for service restart
+
  -h, --help            : this help."
 }
 
@@ -262,6 +265,10 @@ do
 
         -S|--skip-update)
             SKIP_UPDATE=1
+            ;;
+
+        --sudo)
+            SUDO=1
             ;;
 
         *)
@@ -549,7 +556,11 @@ if [ $DEBUG -eq 0 ]; then
             # no .ocsp file found, maybe it's an initial run
             Debug "Reloading haproxy."
 
-            service haproxy reload
+            if [ $SUDO -eq 0 ]; then
+                service haproxy reload
+            else
+                sudo service haproxy reload
+            fi
 
             if [ $? -ne 0 ]; then
                 Error 5 "can't reload haproxy with 'service haproxy reload'"
